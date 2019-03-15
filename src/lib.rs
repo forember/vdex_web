@@ -3,8 +3,6 @@ use std::ffi::CString;
 use std::fmt::Debug;
 use std::ptr::null_mut;
 
-type Boolean = u8;
-
 // MEMORY MANAGEMENT //////////////////////////////////////////////////////////
 
 fn allocate_name(s: String) -> *mut i8 {
@@ -16,8 +14,9 @@ fn allocate_enum_name<E: Enum + Debug>(repr: <E as Enum>::Repr) -> *mut i8 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn vdex_free_name(name: *mut i8) {
-    CString::from_raw(name);
+pub unsafe extern "C" fn vdex_free_name(name: *mut *mut i8) {
+    CString::from_raw(*name);
+    *name = null_mut();
 }
 
 #[no_mangle]
@@ -105,12 +104,23 @@ pub extern "C" fn vdex_type_name(typ: TypeRepr) -> *mut i8 {
 }
 
 #[no_mangle]
+pub static VDEX_INVALID_DAMAGE_TYPE: EfficacyRepr = std::i8::MAX;
+#[no_mangle]
+pub static VDEX_INVALID_TARGET_TYPE: EfficacyRepr = std::i8::MAX - 1;
+
+unsafe fn efficacy(
+    dex: VDexPokedex, damage: TypeRepr, target: TypeRepr
+) -> Result<EfficacyRepr, EfficacyRepr> {
+    let damage_type = Type::from_repr(damage).ok_or(VDEX_INVALID_DAMAGE_TYPE)?;
+    let target_type = Type::from_repr(target).ok_or(VDEX_INVALID_TARGET_TYPE)?;
+    Ok(dex.as_ref().efficacy[(damage_type, target_type)].repr())
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn vdex_efficacy(
     dex: VDexPokedex, damage: TypeRepr, target: TypeRepr
 ) -> EfficacyRepr {
-    let damage_type = Type::from_repr(damage).unwrap();
-    let target_type = Type::from_repr(target).unwrap();
-    dex.as_ref().efficacy[(damage_type, target_type)].repr()
+    efficacy(dex, damage, target).unwrap_or_else(|e| e)
 }
 
 // ITEMS //////////////////////////////////////////////////////////////////////
@@ -159,7 +169,8 @@ pub unsafe extern "C" fn vdex_item_name(dex: VDexPokedex, id: ItemId) -> *mut i8
 
 // ITEM DETAILS ///////////////////////////////////////////////////////////////
 
-type CategoryRepr = <items::Category as Enum>::Repr;
+type ItemCategoryRepr = <items::Category as Enum>::Repr;
+type Boolean = u8;
 type PocketRepr = <items::Pocket as Enum>::Repr;
 type FlingEffectRepr = <items::FlingEffect as Enum>::Repr;
 type ItemFlags = u8;
@@ -187,7 +198,7 @@ pub static VDEX_NO_DOMINANT_FLAVOR: FlavorRepr = std::u8::MAX;
 
 #[no_mangle]
 #[repr(C)] pub struct VDexItemDetails {
-    pub category: CategoryRepr,
+    pub category: ItemCategoryRepr,
     pub unused: Boolean,
     pub pocket: PocketRepr,
     pub cost: u16,
@@ -218,7 +229,7 @@ pub unsafe extern "C" fn vdex_item_details(dex: VDexPokedex, id: ItemId) -> VDex
 }
 
 #[no_mangle]
-pub extern "C" fn vdex_category_name(category: CategoryRepr) -> *mut i8 {
+pub extern "C" fn vdex_item_category_name(category: ItemCategoryRepr) -> *mut i8 {
     allocate_enum_name::<items::Category>(category)
 }
 
