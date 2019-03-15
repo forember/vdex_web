@@ -1,0 +1,11 @@
+[package]
+name = "vdex_web"
+version = "0.1.0"
+authors = ["Chris McKinney <ntd5@tachibanatech.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+vdex = { path = "vdex" }
