@@ -528,14 +528,15 @@ pub static VDEX_STAT_PERMANENT_ATTACK: usize = 1;
 #[no_mangle]
 pub static VDEX_STAT_PERMANENT_DEFENSE: usize = 2;
 #[no_mangle]
-pub static VDEX_STAT_PERMANENT_SPECIAL_ATTACK: usize = 3;
+pub static VDEX_STAT_PERMANENT_SPEED: usize = 3;
 #[no_mangle]
-pub static VDEX_STAT_PERMANENT_SPECIAL_DEFENSE: usize = 4;
+pub static VDEX_STAT_PERMANENT_SPECIAL_ATTACK: usize = 4;
 #[no_mangle]
-pub static VDEX_STAT_PERMANENT_SPEED: usize = 5;
+pub static VDEX_STAT_PERMANENT_SPECIAL_DEFENSE: usize = 5;
 
 #[no_mangle]
 #[repr(C)] pub struct VDexPokemonDetails {
+    id: PokemonIdRepr,
     ability1: AbilityRepr,
     has_ability2: BooleanRepr,
     ability2: AbilityRepr,
@@ -553,6 +554,7 @@ pub unsafe extern "C" fn vdex_pokemon_details(
 ) -> VDexPokemonDetails {
     let pokemon_ref = pokemon.as_ref();
     VDexPokemonDetails {
+        id: pokemon_ref.id.0,
         ability1: pokemon_ref.abilities.first().repr(),
         has_ability2: pokemon_ref.abilities.second().is_some() as BooleanRepr,
         ability2: pokemon_ref.abilities.second().unwrap_or_default().repr(),

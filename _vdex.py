@@ -208,3 +208,86 @@ _f("palace_high_attack", P(c_uint8 * PALACE_COUNT))
 _f("palace_high_defense", P(c_uint8 * PALACE_COUNT))
 
 # Species
+
+Species = c_uint16
+Pokemon = c_uint16
+
+_f("species_name", P(c_char), Species, errcheck=_cstr_errcheck)
+
+# Species Details
+
+_c("NO_STAT_DEPENDENCE", c_int8)
+
+class EvolvesFrom (Structure):
+    _fields_ = [
+            ("from", Pokemon),
+            ("trigger", EvolutionTrigger),
+            ("level", c_uint8),
+            ("gender", Gender),
+            ("mov", Move),
+            ("relative_physical_stats", c_int8),
+            ]
+
+class SpeciesDetails (Structure):
+    _fields_ = [
+            ("generation", Generation),
+            ("egg_group1", EggGroup),
+            ("has_egg_group2", Boolean),
+            ("egg_group2", EggGroup),
+            ("evolved", Boolean),
+            ("evolves_from", EvolvesFrom),
+            ]
+
+_f("species_details", SpeciesDetails, Species)
+
+# Pokemon
+
+_f("pokemon_count", c_size_t, Species)
+
+class Pokemon (Structure):
+    _fields_ = [("ptr", c_void_p)]
+
+_f("pokemon", Pokemon, Species, c_size_t)
+
+# Pokemon Details
+
+_c("PERMANENT_STATS", c_size_t)
+_cg("STAT_PERMANENT", c_size_t, """
+ HP ATTACK DEFENSE SPEED SPECIAL_ATTACK SPECIAL_DEFENSE 
+""")
+
+class PokemonDetails (Structure):
+    _fields_ = [
+            ("id", Pokemon),
+            ("ability1", Ability),
+            ("has_ability2", Boolean),
+            ("ability2", Ability),
+            ("has_hidden_ability", Boolean),
+            ("hidden_ability", Ability),
+            ("stats", c_uint8 * PERMANENT_STATS),
+            ("type1", Type),
+            ("has_type2", Boolean),
+            ("type2", Type),
+            ]
+
+_f("pokemon_details", PokemonDetails, Pokemon)
+
+# Forms
+
+_f("form_count", c_size_t, Pokemon)
+_f("form_veekun_id", c_uint16, Pokemon, c_size_t)
+_f("form_battle_only", Boolean, Pokemon, c_size_t)
+_f("form_name", P(c_char), Pokemon, c_size_t, errcheck=_cstr_errcheck)
+
+# Movesets
+
+_f("moveset_entry_count", c_size_t, Pokemon, VersionGroup)
+
+class MovesetEntry (Structure):
+    _fields_ = [
+            ("mov", Move),
+            ("learn_method", LearnMethod),
+            ("level", c_uint8),
+            ]
+
+_f("moveset_entry", MovesetEntry, Pokemon, VersionGroup, c_size_t)
