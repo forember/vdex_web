@@ -43,22 +43,6 @@ def rate_offense(types):
                 have_super[target] = int(_vdex.efficacy(typ, target) > 0)
     return have_super
 
-def print_team(*team):
-    print("Nrm Fit Fly Psn Gnd Rck Bug Gst Stl Fir Wtr Grs Elc Psy Ice Dgn Drk Pokemon")
-    ratings = []
-    for species in team:
-        name = str(_vdex.species_name(species), 'utf-8')
-        pokemon = _vdex.pokemon(species, 0)
-        details = _vdex.pokemon_details(pokemon)
-        types = get_types(details)
-        resistance = rate_resistance(types, get_immunity(details))
-        print(" ".join([("({})" if r < 0 else " {} ").format(abs(r)) for r in resistance] + [name]))
-        offense = rate_offense(types)
-        print("  ".join([(" +" if h else "  ") for h in offense]))
-        ratings.append([resistance[typ] + (5 * offense[typ])
-            for typ in range(_vdex.TYPE_COUNT)])
-    print(" ".join(["{:3d}".format(sum(a)) for a in zip(*ratings)] + ["TOTAL"]))
-
 GENERATION_IV = 3
 
 def rank_all():
@@ -67,7 +51,7 @@ def rank_all():
         species_details = _vdex.species_details(species)
         if species_details.generation > GENERATION_IV:
             continue
-        name = str(_vdex.species_name(species), 'utf-8')
+        name = _vdex.species_name(species)
         pokemon = _vdex.pokemon(species, 0)
         details = _vdex.pokemon_details(pokemon)
         rating = sum(details.stats) - 400
@@ -79,16 +63,35 @@ def rank_all():
     all_rated.sort(reverse=True)
     return all_rated
 
+def print_team(*team):
+    print("Nrm Fit Fly Psn Gnd Rck Bug Gst Stl Fir Wtr Grs Elc Psy Ice Dgn Drk Pokemon")
+    ratings = []
+    for species in team:
+        name = _vdex.species_name(species)
+        pokemon = _vdex.pokemon(species, 0)
+        details = _vdex.pokemon_details(pokemon)
+        types = get_types(details)
+        resistance = rate_resistance(types, get_immunity(details))
+        print(" ".join([("({})" if r < 0 else " {} ").format(abs(r)) for r in resistance] + [name]))
+        offense = rate_offense(types)
+        print("  ".join([(" +" if h else "  ") for h in offense]))
+        ratings.append([resistance[typ] + (5 * offense[typ])
+            for typ in range(_vdex.TYPE_COUNT)])
+    print(" ".join(["{:3d}".format(sum(a)) for a in zip(*ratings)] + ["TOTAL"]))
+
+SPECIES = dict([(_vdex.species_name(i), i) for i in range(_vdex.SPECIES_COUNT)])
+
 def main():
-    all_rated = rank_all()
-    if len(sys.argv) > 1:
-        with open(sys.argv[1], "w") as f:
-            for rating, name in all_rated:
-                print("{: 4d} {}".format(rating, name), file=f)
-    else:
-        for x in range(50):
-            rating, name = all_rated[x]
-            print("{: 4d} {}".format(rating, name))
+    #all_rated = rank_all()
+    #if len(sys.argv) > 1:
+    #    with open(sys.argv[1], "w") as f:
+    #        for rating, name in all_rated:
+    #            print("{: 4d} {}".format(rating, name), file=f)
+    #else:
+    #    for x in range(50):
+    #        rating, name = all_rated[x]
+    #        print("{: 4d} {}".format(rating, name))
+    print_team(*[SPECIES[name] for name in sys.argv[1:]])
 
 if __name__ == '__main__':
     main()

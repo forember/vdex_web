@@ -27,7 +27,7 @@ _f("_free_name", None, P(P(c_char)))
 def _cstr_errcheck(result, func, arguments):
     if not result:
         return None
-    buf = string_at(addressof(result.contents))
+    buf = str(string_at(addressof(result.contents)), 'utf-8')
     _free_name(result)
     return buf
 
