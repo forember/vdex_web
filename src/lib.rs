@@ -514,7 +514,6 @@ pub unsafe extern "C" fn vdex_pokemon(
 ) -> VDexPokemon {
     let mut pokemon: VDexPokemon = VDexPokemon { ptr: null() };
     pokemon.init(&pokedex().species[SpeciesId(species)].pokemon[pokemon_index]);
-    eprintln!("pointer (Rust): {:p}", pokemon.ptr);
     pokemon
 }
 
@@ -553,16 +552,7 @@ pub static VDEX_STAT_PERMANENT_SPECIAL_DEFENSE: usize = 5;
 pub unsafe extern "C" fn vdex_pokemon_details(
     pokemon: VDexPokemon
 ) -> VDexPokemonDetails {
-    eprintln!("pointer (Rust): {:p}", pokemon.ptr);
     let pokemon_ref = pokemon.as_ref();
-    eprintln!("Pokemon Struct Layout ({}B):",
-            std::mem::size_of::<vdex::pokemon::Pokemon>());
-    eprintln!("BASE: {:p}", pokemon_ref as *const vdex::pokemon::Pokemon);
-    eprintln!("id ({}B): {:p}", std::mem::size_of::<vdex::pokemon::PokemonId>(),
-            &pokemon_ref.id as *const vdex::pokemon::PokemonId);
-    eprintln!("abilities ({}B): {:p}",
-            std::mem::size_of::<vdex::pokemon::OneOrTwo<vdex::Ability>>(),
-            &pokemon_ref.abilities as *const vdex::pokemon::OneOrTwo<vdex::Ability>);
     VDexPokemonDetails {
         id: pokemon_ref.id.0,
         ability1: pokemon_ref.abilities.first().repr(),
