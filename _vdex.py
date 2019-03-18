@@ -5,6 +5,12 @@ import re
 P = POINTER
 vdex = CDLL(path.join(path.dirname(__file__), "target/debug/libvdex_web.so"))
 
+class Opaque (Structure):
+    _fields_ = []
+
+def _opaque_pointer_as_address(ptr):
+    return addressof(ptr.contents)
+
 def _f(name, restype, *argtypes, errcheck=None):
     f = getattr(vdex, "vdex_" + name.lstrip("_"))
     f.restype = restype
@@ -88,7 +94,7 @@ _f("efficacy", Efficacy, Type, Type, errcheck=_efficacy_errcheck)
 Item = c_uint16
 
 class _ItemIter (Structure):
-    _fields_ = [("ptr", c_void_p)]
+    _fields_ = [("ptr", P(Opaque))]
 
 _f("_item_iter", _ItemIter)
 _c("_ITEM_ITER_END", Item)
@@ -211,6 +217,8 @@ _f("palace_high_defense", P(c_uint8 * PALACE_COUNT))
 
 Species = c_uint16
 Pokemon = c_uint16
+_c("SPECIES_COUNT", c_size_t)
+_c("POKEMON_COUNT", c_size_t)
 
 _f("species_name", P(c_char), Species, errcheck=_cstr_errcheck)
 
@@ -244,10 +252,10 @@ _f("species_details", SpeciesDetails, Species)
 
 _f("pokemon_count", c_size_t, Species)
 
-class Pokemon (Structure):
-    _fields_ = [("ptr", c_void_p)]
+class PokemonHandle (Structure):
+    _fields_ = [("ptr", P(Opaque))]
 
-_f("pokemon", Pokemon, Species, c_size_t)
+_f("pokemon", PokemonHandle, Species, c_size_t)
 
 # Pokemon Details
 
@@ -270,18 +278,18 @@ class PokemonDetails (Structure):
             ("type2", Type),
             ]
 
-_f("pokemon_details", PokemonDetails, Pokemon)
+_f("pokemon_details", PokemonDetails, PokemonHandle)
 
 # Forms
 
-_f("form_count", c_size_t, Pokemon)
-_f("form_veekun_id", c_uint16, Pokemon, c_size_t)
-_f("form_battle_only", Boolean, Pokemon, c_size_t)
-_f("form_name", P(c_char), Pokemon, c_size_t, errcheck=_cstr_errcheck)
+_f("form_count", c_size_t, PokemonHandle)
+_f("form_veekun_id", c_uint16, PokemonHandle, c_size_t)
+_f("form_battle_only", Boolean, PokemonHandle, c_size_t)
+_f("form_name", P(c_char), PokemonHandle, c_size_t, errcheck=_cstr_errcheck)
 
 # Movesets
 
-_f("moveset_entry_count", c_size_t, Pokemon, VersionGroup)
+_f("moveset_entry_count", c_size_t, PokemonHandle, VersionGroup)
 
 class MovesetEntry (Structure):
     _fields_ = [
@@ -290,4 +298,4 @@ class MovesetEntry (Structure):
             ("level", c_uint8),
             ]
 
-_f("moveset_entry", MovesetEntry, Pokemon, VersionGroup, c_size_t)
+_f("moveset_entry", MovesetEntry, PokemonHandle, VersionGroup, c_size_t)
