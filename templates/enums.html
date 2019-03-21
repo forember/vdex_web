@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Enums{% endblock %}
+
+{% macro enum(name) -%}
+<li><a href="/enums/{{ name }}">{{ name }}</a></li>
+{%- endmacro %}
+
+{% block body %}
+<h1>Enums</h1>
+<ul>
+    {{ enum("Ability") }}
+    {{ enum("Efficacy") }}
+    {{ enum("Nature") }}
+    {{ enum("Type") }}
+
+    {{ enum("ItemCategory") }}
+    {{ enum("Flavor") }}
+    {{ enum("FlingEffect") }}
+    {{ enum("Pocket") }}
+
+    {{ enum("Ailment") }}
+    {{ enum("BattleStyle") }}
+    {{ enum("MoveCategory") }}
+    {{ enum("DamageClass") }}
+    {{ enum("MoveEffect") }}
+    {{ enum("LearnMethod") }}
+    {{ enum("MoveTarget") }}
+
+    {{ enum("EggGroup") }}
+    {{ enum("EvolutionTrigger") }}
+    {{ enum("Gender") }}
+
+    {{ enum("Generation") }}
+    {{ enum("Version") }}
+    {{ enum("VersionGroup") }}
+</ul>
+{% endblock %}

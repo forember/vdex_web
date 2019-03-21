@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ name|e }} | Enums{% endblock %}
+
+{% block body %}
+<h1>Enum: {{ name|e }}</h1>
+<ul>
+    {% for n in names %}
+    <li>{{ n|e }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

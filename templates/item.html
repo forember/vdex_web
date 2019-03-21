@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ name|e }} | Items{% endblock %}
+
+{% block body %}
+<h1>Item: {{ name|e }}</h1>
+<p>Pocket: {{ pocket|e }}; Category: {{ category|e }}</p>
+{% if details.unused %}
+<p>Items in this category are unused in pbirch.</p>
+{% endif %}
+<p>Cost: {{ details.cost|int }}</p>
+<p>Fling Power: {{ details.fling_power|int }}; Effect: {{ fling_effect|e }}</p>
+{% if flags %}
+<h3>Flags</h3>
+<ul>
+    {% for flag in flags %}
+    <li>{{ flag|e }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% if details.natural_gift_power %}
+<h3>Berry</h3>
+<p>Natural Gift Power: {{ details.natural_gift_power|int }};
+Type: {{ natural_gift_type|e }}</p>
+<p>Flavor: {{ flavor }}</p>
+{% endif %}
+{% endblock %}

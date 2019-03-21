@@ -18,11 +18,22 @@ def _f(name, restype, *argtypes, errcheck=None):
     if errcheck is not None:
         f.errcheck = errcheck
     globals()[name] = f
+    return f
 
 def _c(name, typ):
-    globals()[name] = typ.in_dll(vdex, "VDEX_" + name.lstrip("_")).value
+    c = typ.in_dll(vdex, "VDEX_" + name.lstrip("_")).value
+    globals()[name] = c
+    return c
 
 _f("_free_name", None, P(P(c_char)))
+
+def to_snake_case(name):
+    return re.sub(r"(?!^)([A-Z0-9])", r"_\1", name).lower()
+
+def _const_array_errcheck(result, func, arguments):
+    if not result:
+        return None
+    return result.contents
 
 def _cstr_errcheck(result, func, arguments):
     if not result:
@@ -33,15 +44,16 @@ def _cstr_errcheck(result, func, arguments):
 
 def _e(name, typ=c_uint8):
     globals()[name] = typ
-    lname = re.sub(r"(?!^)([A-Z])", r"_\1", name).lower()
-    uname = lname.upper()
-    _c(uname + "_COUNT", c_size_t)
-    _f(lname + "_list", typ)
-    _f(lname + "_name", P(c_char), typ, errcheck=_cstr_errcheck)
+    sname = to_snake_case(name)
+    count = _c(sname.upper() + "_COUNT", c_size_t)
+    _f(sname + "_list", P(typ * count), errcheck=_const_array_errcheck)
+    _f(sname + "_name", P(c_char), typ, errcheck=_cstr_errcheck)
 
 def _cg(base, typ, names):
-    for name in names.strip().split(" "):
-        _c(base + "_" + name.strip(), typ)
+    s = [name.strip() for name in names.strip().split(" ")]
+    globals()[base] = s
+    for name in s:
+        _c(base + "_" + name, typ)
 
 # Enums
 
@@ -208,10 +220,10 @@ _f("move_details", MoveDetails, Move)
 # Palace
 
 _c("PALACE_COUNT", c_size_t)
-_f("palace_low_attack", P(c_uint8 * PALACE_COUNT))
-_f("palace_low_defense", P(c_uint8 * PALACE_COUNT))
-_f("palace_high_attack", P(c_uint8 * PALACE_COUNT))
-_f("palace_high_defense", P(c_uint8 * PALACE_COUNT))
+_f("palace_low_attack", P(c_uint8 * PALACE_COUNT), errcheck=_const_array_errcheck)
+_f("palace_low_defense", P(c_uint8 * PALACE_COUNT), errcheck=_const_array_errcheck)
+_f("palace_high_attack", P(c_uint8 * PALACE_COUNT), errcheck=_const_array_errcheck)
+_f("palace_high_defense", P(c_uint8 * PALACE_COUNT), errcheck=_const_array_errcheck)
 
 # Species
 

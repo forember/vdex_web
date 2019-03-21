@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Efficacy Table{% endblock %}
+
+{% block head %}
+<style>
+td, th {
+    min-width: 50px;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Efficacy Table</h1>
+<table>
+    <tr>
+        <td style="text-align:right">&darr;A D&rarr;</td>
+        {% for n in names %}
+        <th>{{ n|e }}</th>
+        {% endfor %}
+    </tr>
+    {% for x in range(efficacy|length) %}
+    <tr>
+        <th style="text-align:right">{{ names[x]|e }}</th>
+        {% for eff in efficacy[x] %}
+        {% if eff == -2 %}
+        <td style="background-color:black;color:white">0x</td>
+        {% elif eff == -1 %}
+        <td style="background-color:red">0.5x</td>
+        {% elif eff == 0 %}
+        <td style="background-color:white">1x</td>
+        {% elif eff == 1 %}
+        <td style="background-color:green">2x</td>
+        {% else %}
+        <td>INVALID</td>
+        {% endif %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

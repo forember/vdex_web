@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{% block title %}{% endblock %} | VDex Web</title>
+        <style>
+        a {
+            color: teal;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        td, th {
+            border: 1px solid gray;
+        }
+        </style>
+        {% block head %}{% endblock %}
+    </head>
+    <body>
+        <div><a href="/">[Home]</a></div>
+        {% block body %}{% endblock %}
+    </body>
+</html>

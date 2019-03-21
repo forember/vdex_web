@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ move.name|e }} | Moves{% endblock %}
+
+{% block body %}
+<h1>Move: {{ move.name|e }}</h1>
+<p>Generation: {{ move.generation|e }}; Category: {{ move.category|e }}</p>
+<p>Type: {{ move.typ|e }}; Class: {{ move.damage_class|e }}</p>
+<p>Power: {{ move.power|e }}; Accuracy: {{ move.accuracy|e }};
+PP: {{ move.details.power|int }}; Priority: {{ move.details.priority|int }}</p>
+<p>Targeting: {{ move.target|e }}</p>
+<p>Effect: {{ move.effect|e }};
+Chance: {{ move.details.effect_chance|int }}%</p>
+<h3>Extra Info</h3>
+<ul>
+    {% for entry in move.extra %}
+    <li>{{ entry|e }}</li>
+    {% endfor %}
+</ul>
+<h3>Flags</h3>
+<ul>
+    {% for flag in move.flags %}
+    <li>{{ flag|e }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

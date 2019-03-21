@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Moves{% endblock %}
+
+{% block head %}
+<style>
+.center {
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Moves</h1>
+<table>
+    <tr>
+        <th>Name</th>
+        <th title="Generation">Gen.</th>
+        <th>Type</th>
+        <th>Class</th>
+        <th>Power</th>
+        <th title="Accuracy">Acc.</th>
+        <th>PP</th>
+        <th title="Priority">Pri.</th>
+        <th>Effect</th>
+        <th>Extra Info</th>
+    </tr>
+    {% for move in moves %}
+    <tr>
+        <td><a href="/moves/{{ move.move|int }}">{{ move.name|e }}</a></td>
+        <td>{{ move.generation|e }}</td>
+        <td>{{ move.typ|e }}</td>
+        <td>{{ move.damage_class|e }}</td>
+        <td class="center">{{ move.power|e }}</td>
+        <td class="center">{{ move.accuracy|e }}</td>
+        <td class="center">{{ move.details.pp|int }}</td>
+        {% if move.details.priority == 0 %}
+        <td></td>
+        {% else %}
+        <td class="center">{{ move.details.priority|int }}</td>
+        {% endif %}
+        <td>{{ move.effect_spaced|e }}</td>
+        <td>
+            {% for entry in move.extra %}
+            {{ entry|e }}
+            {% endfor %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

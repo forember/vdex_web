@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Palace Table{% endblock %}
+
+{% block head %}
+<style>
+td, th {
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Palace Table</h1>
+<table>
+    <tr>
+        <th rowspan="2">Nature<th>
+        <th colspan="3">Low</th>
+        <th colspan="3">High</th>
+    </tr>
+    <tr>
+        <th>Attack</th>
+        <th>Defense</th>
+        <th>Support</th>
+        <th>Attack</th>
+        <th>Defense</th>
+        <th>Support</th>
+    </tr>
+    {% for row in rows %}
+    <tr>
+        <td>{{ row[0]|e }}</td>
+        <td>{{ row[1]|int }}%</td>
+        <td>{{ row[2]|int }}%</td>
+        <td>{{ (100 - (row[1] + row[2]))|int }}%</td>
+        <td>{{ row[3]|int }}%</td>
+        <td>{{ row[4]|int }}%</td>
+        <td>{{ (100 - (row[3] + row[4]))|int }}%</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
