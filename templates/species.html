@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Species{% endblock %}
+
+{% block head %}
+<style>
+tr {
+    min-height: 36px;
+    height: 36px;
+}
+th, td {
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% macro pokemon(p) -%}
+<td>{% if p.forms[0][0] %}{{ p.forms[0][0]|e }}{% endif %}</td>
+<td>
+    {% for type in p.types %}
+    <div>{{ type|e }}</div>
+    {% endfor %}
+</td>
+<td>
+    {% for ability in p.abilities %}
+    <div>{{ ability|e }}</div>
+    {% endfor %}
+</td>
+<td>{{ p.stats["HP"]|int }}</td>
+<td>{{ p.stats["ATTACK"]|int }}</td>
+<td>{{ p.stats["DEFENSE"]|int }}</td>
+<td>{{ p.stats["SPECIAL_ATTACK"]|int }}</td>
+<td>{{ p.stats["SPECIAL_DEFENSE"]|int }}</td>
+<td>{{ p.stats["SPEED"]|int }}</td>
+<td>{{ p.stats.values()|sum|int }}</td>
+{%- endmacro %}
+
+{% block body %}
+<h1>Species</h1>
+<table>
+    <tr>
+        <th>Name</th>
+        <th title="Generation">Gen.</th>
+        <th>Form</th>
+        <th>Types</th>
+        <th>Abilities</th>
+        <th title="Hit Points">HP</th>
+        <th title="Attack">Atk</th>
+        <th title="Defense">Def</th>
+        <th title="Special Attack">SpA</th>
+        <th title="Special Defense">SpD</th>
+        <th title="Speed">Spd</th>
+        <th>Total</th>
+        <th>Egg Groups</th>
+        <th>Evolves From</th>
+    </tr>
+    {% for species in speciess %}
+    {% set count = species.pokemon|length|int %}
+    <tr>
+        <td rowspan="{{ count }}">
+            <a href="/species/{{ species.species|int }}/">
+                {{ species.name|e }}
+            </a>
+        </td>
+        <td rowspan="{{ count }}">{{ species.generation|e }}</td>
+        {{ pokemon(species.pokemon[0]) }}
+        <td rowspan="{{ count }}">
+            {% for group in species.egg_groups %}
+            <div>{{ group|e }}</div>
+            {% endfor %}
+        </td>
+        <td rowspan="{{ count }}">
+            {% if species.evolves_from != None %}
+            <a href="/species/{{ species.evolves_from.ef.species|int }}/">
+                {{ species.evolves_from.ef.name|e }}
+            </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% for p in species.pokemon[1:] %}
+    <tr>
+        {{ pokemon(p) }}
+    </tr>
+    {% endfor %}
+    {% endfor %}
+</table>
+{% endblock %}

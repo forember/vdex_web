@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ species.name|e }} | Species{% endblock %}
+
+{% block head %}
+<style>
+.stat {
+    display: inline-block;
+    border: 1px solid black;
+    background-color: lightcyan;
+}
+.center {
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% macro form(f) -%}
+{% if f[0] %}{{ f[0]|e }}{% else %}default{% endif %}
+{%- endmacro %}
+
+{% macro statrow(h, key) -%}
+<tr>
+    <th>{{ h|e }}</th>
+    <td style="width: 256px">
+        <span class="stat" style="width: {{ pokemon.stats[key]|int }}px">
+            {{ pokemon.stats[key]|int }}
+        </span>
+    </td>
+</tr>
+{%- endmacro %}
+
+{% block body %}
+<h1>Species: {{ species.name|e }}</h1>
+<p>Generation: {{ species.generation|e }}</p>
+<p>Egg Groups: {{ ", ".join(species.egg_groups)|e }}</p>
+{% if species.evolves_from %}
+<p>
+    Evolves from
+    <a href="/species/{{ species.evolves_from.ef.species|int }}/">
+        {{ species.evolves_from.ef.name|e }}</a>
+    on {{ species.evolves_from.trigger|e }}
+    {% if species.evolves_from.struct.level > 0 %}
+    at level {{ species.evolves_from.struct.level|int }}
+    {% endif %}
+    {% if species.evolves_from.gender != "Genderless" %}
+    {{ species.evolves_from.gender|e }} only
+    {% endif %}
+    {% if species.evolves_from.mov %}
+    knowing {{ species.evolves_from.mov.name|e }}
+    {% endif %}
+    {% set rps = species.evolves_from.struct.relative_physical_stats %}
+    {% if rps == 1 %}
+    with Attack &gt; Defense
+    {% elif rps == 0 %}
+    with Attack = Defense
+    {% elif rps == -1 %}
+    with Attack &lt; Defense
+    {% endif %}
+</p>
+{% endif %}
+{% if species.pokemon|length > 1 %}
+<!-- TODO: forms -->
+<p>This species has multiple forms:</p>
+<ul>
+    {% for p in species.pokemon %}
+    <li><a href="/species/{{ species.species|int }}/{{ loop.index0|int }}">
+            {{ form(p.forms[0]) }}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+<h2>Selected Form: {{ form(pokemon.forms[0]) }}</h2>
+{% if pokemon.forms|length > 1 %}
+<h3>Visual Variants</h3>
+<ul>
+    {% for f in pokemon.forms %}
+    <li>{{ form(f) }} {% if f[1] %}(battle only){% endif %}</li>
+    {% endfor %}
+</ul>
+<p>These variants have no effect on ability, stats, type, or moves.</p>
+{% elif pokemon.forms[0][1] %}
+<p>This form is battle-only.</p>
+{% endif %}
+<h3>Form Details</h3>
+<p>Ability: {{ " / ".join(pokemon.abilities) }}</p>
+{% if pokemon.hidden_ability %}
+<p>Hidden Ability: {{ pokemon.hidden_ability }}</p>
+{% endif %}
+<p>Type: {{ " ".join(pokemon.types) }}</p>
+<table>
+    {{ statrow("HP", "HP") }}
+    {{ statrow("Attack", "ATTACK") }}
+    {{ statrow("Defense", "DEFENSE") }}
+    {{ statrow("Sp. Attack", "SPECIAL_ATTACK") }}
+    {{ statrow("Sp. Defense", "SPECIAL_DEFENSE") }}
+    {{ statrow("Speed", "SPEED") }}
+    <tr>
+        <th>Total</th>
+        <td style="width: 256px">
+            {% set total = pokemon.stats.values()|sum %}
+            <span class="stat" style="width: {{ (total / 6)|int }}px">
+                {{ total|int }}
+            </span>
+        </td>
+    </tr>
+</table>
+<h3>Form Moveset for BW2</h3>
+{% set moveset = pokemon.movesets["BlackWhite2"] %}
+<table>
+    <tr>
+        <th>Method</th>
+        <th>Level</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Class</th>
+        <th>Power</th>
+        <th title="Accuracy">Acc.</th>
+        <th>PP</th>
+        <th title="Priority">Pri.</th>
+        <th>Effect</th>
+        <th>Extra Info</th>
+    </tr>
+    {% for _, method, level, _, move in moveset %}
+    <tr>
+        <td>{{ method|e }}</td>
+        {% if level == 0 %}
+        <td></td>
+        {% elif level == 1 %}
+        <td>--</td>
+        {% else %}
+        <td>{{ level|e }}</td>
+        {% endif %}
+        <td><a href="/moves/{{ move.move|int }}">{{ move.name|e }}</a></td>
+        <td>{{ move.typ|e }}</td>
+        <td>{{ move.damage_class|e }}</td>
+        <td class="center">{{ move.power|e }}</td>
+        <td class="center">{{ move.accuracy|e }}</td>
+        <td class="center">{{ move.details.pp|int }}</td>
+        {% if move.details.priority == 0 %}
+        <td></td>
+        {% else %}
+        <td class="center">{{ move.details.priority|int }}</td>
+        {% endif %}
+        <td>{{ move.effect_spaced|e }}</td>
+        <td>
+            {% for entry in move.extra %}
+            {{ entry|e }}
+            {% endfor %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

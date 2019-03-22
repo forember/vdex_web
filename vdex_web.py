@@ -100,7 +100,9 @@ class Move:
         def _a(fmt, *args):
             self.extra.append(fmt.format(*args) + ".")
         if self.ailment != "None":
-            _a("{}% {} chance", _c(details.ailment_chance), self.ailment)
+            chance = _c(details.ailment_chance)
+            volstar = "*" if details.ailment_volatile else ""
+            _a("{}% {}{} chance", chance, self.ailment, volstar)
         if details.min_hits != 1 or details.max_hits != 1:
             if details.min_hits == details.max_hits:
                 _a("{} hits", details.max_hits)
@@ -131,14 +133,17 @@ class Move:
             else:
                 _a("{}% chance for {}", _c(details.stat_chance), changes)
 
+MOVES = [Move(move) for move in range(_vdex.MOVE_COUNT)]
+
 @app.route("/moves/")
 def moves():
-    moves = [Move(move) for move in range(_vdex.MOVE_COUNT)]
-    return flask.render_template("moves.html", moves=moves)
+    return flask.render_template("moves.html", moves=MOVES)
 
 @app.route("/moves/<int:move>")
 def move(move):
-    return flask.render_template("move.html", move=Move(move))
+    if move < 0 or move >= _vdex.MOVE_COUNT:
+        flask.abort(404)
+    return flask.render_template("move.html", move=MOVES[move])
 
 @app.route("/palace")
 def palace():
@@ -146,3 +151,78 @@ def palace():
             _vdex.palace_low_attack(), _vdex.palace_low_defense(),
             _vdex.palace_high_attack(), _vdex.palace_high_defense())
     return flask.render_template("palace.html", rows=rows)
+
+SPECIES = [None] * _vdex.SPECIES_COUNT
+
+def get_species(species):
+    if species < 0 or species >= _vdex.SPECIES_COUNT:
+        return None
+    if species not in SPECIES:
+        SPECIES[species] = Species(species)
+    return SPECIES[species]
+
+class EvolvesFrom:
+    def __init__(self, struct):
+        self.struct = struct
+        self.ef = get_species(getattr(struct, "from"))
+        self.trigger = _vdex.evolution_trigger_name(struct.trigger)
+        self.gender = _vdex.gender_name(struct.gender)
+        self.mov = None
+        if struct.mov < _vdex.MOVE_COUNT:
+            self.mov = MOVES[struct.mov]
+
+class Pokemon:
+    def __init__(self, handle):
+        self.details = details = _vdex.pokemon_details(handle)
+        self.abilities = [_vdex.ability_name(details.ability1)]
+        if details.has_ability2:
+            self.abilities.append(_vdex.ability_name(details.ability2))
+        self.hidden_ability = None
+        if details.has_hidden_ability:
+            self.hidden_ability = _vdex.ability_name(details.hidden_ability)
+        self.stats = dict(zip(_vdex.STAT_PERMANENT, details.stats))
+        self.types = [_vdex.type_name(details.type1)]
+        if details.has_type2:
+            self.types.append(_vdex.type_name(details.type2))
+        self.forms = []
+        for index in range(_vdex.form_count(handle)):
+            self.forms.append((_vdex.form_name(handle, index),
+                    _vdex.form_battle_only(handle, index)))
+        self.movesets = {}
+        for vg in _vdex.version_group_list():
+            self.movesets[_vdex.version_group_name(vg)] = moveset = []
+            for index in range(_vdex.moveset_entry_count(handle, vg)):
+                entry = _vdex.moveset_entry(handle, vg, index)
+                learn_method = _vdex.learn_method_name(entry.learn_method)
+                moveset.append((entry.learn_method, learn_method, entry.level,
+                        index, MOVES[entry.mov]))
+            moveset.sort()
+
+class Species:
+    def __init__(self, species):
+        self.species = species
+        self.name = _vdex.species_name(species)
+        self.details = details = _vdex.species_details(species)
+        self.generation = _vdex.generation_name(details.generation)
+        self.egg_groups = [_vdex.egg_group_name(details.egg_group1)]
+        if details.has_egg_group2:
+            self.egg_groups.append(_vdex.egg_group_name(details.egg_group2))
+        self.evolves_from = None
+        if details.evolved:
+            self.evolves_from = EvolvesFrom(details.evolves_from)
+        self.pokemon = []
+        for index in range(_vdex.pokemon_count(species)):
+            self.pokemon.append(Pokemon(_vdex.pokemon(species, index)))
+
+for _species in range(_vdex.SPECIES_COUNT):
+    get_species(_species)
+
+@app.route("/species/")
+def species():
+    return flask.render_template("species.html", speciess=SPECIES)
+
+@app.route("/species/<int:species>/")
+@app.route("/species/<int:species>/<int:pokemon>")
+def pokemon(species, pokemon=0):
+    return flask.render_template("pokemon.html", species=SPECIES[species],
+            pokemon=SPECIES[species].pokemon[pokemon])

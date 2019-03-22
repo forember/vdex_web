@@ -9,8 +9,13 @@
 <p>Power: {{ move.power|e }}; Accuracy: {{ move.accuracy|e }};
 PP: {{ move.details.power|int }}; Priority: {{ move.details.priority|int }}</p>
 <p>Targeting: {{ move.target|e }}</p>
-<p>Effect: {{ move.effect|e }};
-Chance: {{ move.details.effect_chance|int }}%</p>
+<p>Effect: {{ move.effect|e }}; Chance:
+{% if move.details.effect_chance == 0 %}
+100%
+{% else %}
+{{ move.details.effect_chance|int }}%
+{% endif %}
+</p>
 <h3>Extra Info</h3>
 <ul>
     {% for entry in move.extra %}
