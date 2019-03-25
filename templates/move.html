@@ -7,7 +7,7 @@
 <p>Generation: {{ move.generation|e }}; Category: {{ move.category|e }}</p>
 <p>Type: {{ move.typ|e }}; Class: {{ move.damage_class|e }}</p>
 <p>Power: {{ move.power|e }}; Accuracy: {{ move.accuracy|e }};
-PP: {{ move.details.power|int }}; Priority: {{ move.details.priority|int }}</p>
+PP: {{ move.details.pp|int }}; Priority: {{ move.details.priority|int }}</p>
 <p>Targeting: {{ move.target|e }}</p>
 <p>Effect: {{ move.effect|e }}; Chance:
 {% if move.details.effect_chance == 0 %}
