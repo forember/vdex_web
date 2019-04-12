@@ -1,3 +1,4 @@
+// vim: set ts=2 sts=2 sw=2 et :
 let cheerio = require("cheerio")
 let fs = require("fs-extra")
 let path = require("path")
@@ -11,11 +12,10 @@ function replaceExt(filePath, ext) {
 }
 
 function breadcrumbs(relPath) {
-  let to = "/vdex-web"
+  let to = "/"
   let b = [{
     disabled: false,
-    nuxt: true,
-    text: "vdex-web",
+    text: "VDex",
     to: to,
   }]
   let woExt = replaceExt(relPath, "")
@@ -23,7 +23,7 @@ function breadcrumbs(relPath) {
     woExt = path.dirname(woExt)
   }
   for (let part of woExt.split(path.sep)) {
-    to += "/" + part
+    to += part + "/"
     b.push({
       disabled: false,
       nuxt: true,
@@ -38,6 +38,7 @@ function breadcrumbs(relPath) {
 function convert(relPath, content) {
   let $ = cheerio.load(content)
   let title = $("title").text().replace("|", "-")
+  let styles = $("style")
   $("a").each(function(index, elem) {
     let text = $(this).text()
     let href = $(this).attr("href").replace("/", path.sep)
@@ -46,24 +47,40 @@ function convert(relPath, content) {
       woExt = path.dirname(woExt)
     }
     let joined = path.join(path.dirname(relPath), woExt)
-    let to = "/vdex-web/" + joined.replace(path.sep, "/")
-    let link = $("<nuxt-link></nuxt-link>")
-    link.attr("to", to)
+    let to = "/" + joined.replace(path.sep, "/")
+    let link  = $("<a></a>")
+    link.attr("href", to)
     link.text(text)
     $(this).replaceWith(link)
   })
   let elements = $("body").children().slice(1)
   let s = "<template>\n<div>\n"
-  s += "<v-breadcrumbs :items=\"breadcrumbs\" divider=\"/\"></v-breadcrumbs>\n"
+  s += "<div>\n"
+  for (let crumb of breadcrumbs(relPath)) {
+    if (crumb.disabled) {
+      let a = $("<span></span>")
+      a.text(crumb.text)
+      s += $.html(a) + "\n"
+    } else {
+      let a = $("<a></a>")
+      a.attr("href", crumb.to)
+      a.text(crumb.text)
+      s += $.html(a) + " /\n"
+    }
+  }
+  s += "</div>\n"
   elements.each(function(index, elem) {
     s += $.html($(this))
   })
   s += "</div>\n</template>\n<script lang=\"ts\">\n"
   s += "import { Component, Vue } from \"nuxt-property-decorator\"\n"
   s += "@Component\nexport default class Page extends Vue {\n"
-  s += "breadcrumbs: object[] = " + JSON.stringify(breadcrumbs(relPath)) + "\n"
-  s += "head() {\nreturn {\ntitle: " + JSON.stringify(title) + "\n}\n}\n"
-  s += "}\n</script>\n"
+  s += "head() {\nreturn {\ntitle: " + JSON.stringify(title) + "\n} } "
+  s += "}\n</script>\n<style>\n"
+  styles.each(function(index, elem) {
+    s += $(this).html() + "\n"
+  })
+  s += "\n</style>\n"
   return s
 }
 
