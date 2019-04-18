@@ -240,7 +240,7 @@ _c("NO_STAT_DEPENDENCE", c_int8)
 
 class EvolvesFrom (Structure):
     _fields_ = [
-            ("from", Species),
+            ("from_id", Species),
             ("trigger", EvolutionTrigger),
             ("level", c_uint8),
             ("gender", Gender),

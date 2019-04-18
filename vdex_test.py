@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import _vdex
 import sys
 
@@ -43,13 +44,27 @@ def rate_offense(types):
                 have_super[target] = int(_vdex.efficacy(typ, target) > 0)
     return have_super
 
-GENERATION_IV = 3
+def gen_evolves(generations):
+    for species in range(_vdex.SPECIES_COUNT):
+        species_details = _vdex.species_details(species)
+        if species_details.generation not in generations:
+            continue
+        from_id = species_details.evolves_from.from_id
+        from_details = _vdex.species_details(from_id)
+        if from_details.generation not in generations:
+            continue
+        yield from_id
 
-def rank_all():
+def rank_all(generations=None, final=False):
+    if not generations:
+        generations = list(range(5))
+    evolves = set(gen_evolves(generations))
     all_rated = []
     for species in range(_vdex.SPECIES_COUNT):
         species_details = _vdex.species_details(species)
-        if species_details.generation > GENERATION_IV:
+        if species_details.generation not in generations:
+            continue
+        if final and species in evolves:
             continue
         name = _vdex.species_name(species)
         pokemon = _vdex.pokemon(species, 0)
@@ -62,6 +77,11 @@ def rank_all():
         all_rated.append((rating, name))
     all_rated.sort(reverse=True)
     return all_rated
+
+def print_ranked(generations=None, final=False):
+    all_rated = rank_all(generations, final)
+    for rating, name in all_rated:
+        print("{: 4d} {}".format(rating, name))
 
 def print_team(*team):
     print("Nrm Fit Fly Psn Gnd Rck Bug Gst Stl Fir Wtr Grs Elc Psy Ice Dgn Drk Pokemon")
@@ -81,17 +101,31 @@ def print_team(*team):
 
 SPECIES = dict([(_vdex.species_name(i), i) for i in range(_vdex.SPECIES_COUNT)])
 
+def usage():
+    print("""Usage: {0} <command> [arguments...]
+team [Pokemon...]
+    Print a type analysis table for a team.
+rank all [Generations...]
+    Rank Pokémon based on stats and type from the given generations.
+rank final [Generations...]
+    Rank final evolutions  from the given generations.
+""".format(sys.argv[0]))
+
 def main():
-    #all_rated = rank_all()
-    #if len(sys.argv) > 1:
-    #    with open(sys.argv[1], "w") as f:
-    #        for rating, name in all_rated:
-    #            print("{: 4d} {}".format(rating, name), file=f)
-    #else:
-    #    for x in range(50):
-    #        rating, name = all_rated[x]
-    #        print("{: 4d} {}".format(rating, name))
-    print_team(*[SPECIES[name] for name in sys.argv[1:]])
+    if len(sys.argv) < 2:
+        usage()
+    elif sys.argv[1] == 'team':
+        print_team(*[SPECIES[name] for name in sys.argv[2:]])
+    elif sys.argv[1] == 'rank':
+        generations = set([int(num) - 1 for num in sys.argv[3:]])
+        if len(sys.argv) < 3:
+            usage()
+        elif sys.argv[2] == 'all':
+            print_ranked(generations, final=False)
+        elif sys.argv[2] == 'final':
+            print_ranked(generations, final=True)
+    else:
+        usage()
 
 if __name__ == '__main__':
     main()

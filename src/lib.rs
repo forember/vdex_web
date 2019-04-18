@@ -444,7 +444,7 @@ pub static VDEX_NO_STAT_DEPENDENCE: i8 = std::i8::MAX;
 #[derive(Default)]
 #[no_mangle]
 #[repr(C)] pub struct VDexEvolvesFrom {
-    pub from: PokemonIdRepr,
+    pub from_id: PokemonIdRepr,
     pub trigger: EvolutionTriggerRepr,
     pub level: u8,
     pub gender: GenderRepr,
@@ -474,7 +474,7 @@ pub extern "C" fn vdex_species_details(id: SpeciesIdRepr) -> VDexSpeciesDetails 
         evolves_from: match species.evolves_from {
             None => Default::default(),
             Some(e) => VDexEvolvesFrom {
-                from: e.from_id.0,
+                from_id: e.from_id.0,
                 trigger: e.trigger.repr(),
                 level: e.level,
                 gender: e.gender.repr(),
