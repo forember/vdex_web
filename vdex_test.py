@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import _vdex
 import sys
+from collections import OrderedDict
 
 def get_types(details):
     if details.has_type2:
@@ -99,6 +100,22 @@ def print_team(*team):
             for typ in range(_vdex.TYPE_COUNT)])
     print(" ".join(["{:3d}".format(sum(a)) for a in zip(*ratings)] + ["TOTAL"]))
 
+def load_effects():
+    effects = OrderedDict([(_vdex.move_effect_name(e), []) for e in _vdex.move_effect_list()])
+    for i in range(_vdex.MOVE_COUNT):
+        move = _vdex.move_name(i)
+        effect = _vdex.move_effect_name(_vdex.move_details(i).effect)
+        effects[effect].append(move)
+    return effects
+
+EFFECTS = load_effects()
+
+def print_effects():
+    for effect, moves in EFFECTS.items():
+        print(effect)
+        for move in moves:
+            print("  " + move)
+
 SPECIES = dict([(_vdex.species_name(i), i) for i in range(_vdex.SPECIES_COUNT)])
 
 def usage():
@@ -109,6 +126,8 @@ rank all [Generations...]
     Rank Pokémon based on stats and type from the given generations.
 rank final [Generations...]
     Rank final evolutions  from the given generations.
+effects
+    List pbirch move effects and their associated move lists.
 """.format(sys.argv[0]))
 
 def main():
@@ -124,6 +143,8 @@ def main():
             print_ranked(generations, final=False)
         elif sys.argv[2] == 'final':
             print_ranked(generations, final=True)
+    elif sys.argv[1] == 'effects':
+        print_effects()
     else:
         usage()
 
