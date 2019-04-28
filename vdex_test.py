@@ -9,16 +9,27 @@ def get_types(details):
     else:
         return (details.type1,)
 
-LEVITATE = 26
 GROUND_TYPE = 4
-FLASH_FIRE = 18
+LEVITATE = 26
+
 FIRE_TYPE = 9
+FLASH_FIRE = 18
+
+WATER_TYPE = 10
+WATER_ABSORB = 11
+
+ELECTRIC_TYPE = 12
+VOLT_ABSORB = 10
 
 def get_immunity(details):
     if details.ability1 == LEVITATE or details.ability2 == LEVITATE:
         return GROUND_TYPE
     elif details.ability1 == FLASH_FIRE or details.ability2 == FLASH_FIRE:
         return FIRE_TYPE
+    elif details.ability1 == WATER_ABSORB or details.ability2 == WATER_ABSORB:
+        return WATER_TYPE
+    elif details.ability1 == VOLT_ABSORB or details.ability2 == VOLT_ABSORB:
+        return ELECTRIC_TYPE
     else:
         return None
 
