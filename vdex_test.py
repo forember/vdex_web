@@ -2,6 +2,7 @@
 import _vdex
 import sys
 from collections import OrderedDict
+from itertools import combinations
 
 def get_types(details):
     if details.has_type2:
@@ -109,7 +110,42 @@ def print_team(*team):
         print("  ".join([(" +" if h else "  ") for h in offense]))
         ratings.append([resistance[typ] + (5 * offense[typ])
             for typ in range(_vdex.TYPE_COUNT)])
-    print(" ".join(["{:3d}".format(sum(a)) for a in zip(*ratings)] + ["TOTAL"]))
+    totals = [sum(a) for a in zip(*ratings)]
+    print(" ".join(["{:3d}".format(t) for t in totals] + ["TOTAL", str(sum(totals))]))
+
+def score_team(*team):
+    ratings = []
+    for species in team:
+        name = _vdex.species_name(species)
+        pokemon = _vdex.pokemon(species, 0)
+        details = _vdex.pokemon_details(pokemon)
+        types = get_types(details)
+        resistance = rate_resistance(types, get_immunity(details))
+        offense = rate_offense(types)
+        ratings.append([resistance[typ] + (5 * offense[typ])
+            for typ in range(_vdex.TYPE_COUNT)])
+    totals = [sum(a) for a in zip(*ratings)]
+    mintotal = min(totals)
+    mincount = totals.count(mintotal)
+    fulltotal = sum(totals)
+    return (mintotal, -mincount, fulltotal, team)
+
+def score_combinations(pokemon, size, cutoff):
+    combs = list(combinations(pokemon, size))
+    scores = []
+    for i, team in enumerate(combs):
+        if i % 1000 == 0:
+            print("{}/{}".format(i, len(combs)), file=sys.stderr)
+        score = score_team(*team)
+        if score[0] >= cutoff:
+          scores.append(score)
+    print("Sorting...", file=sys.stderr)
+    scores.sort()
+    for mt, mc, ft, team in scores:
+        print("TEAM: {}".format(" ".join(_vdex.species_name(species) for species in team)))
+        print_team(*team)
+        print("MINIMUM: {} {}s; FULL TOTAL: {}".format(-mc, mt, ft))
+        print()
 
 def load_effects():
     effects = OrderedDict([(_vdex.move_effect_name(e), []) for e in _vdex.move_effect_list()])
@@ -133,6 +169,8 @@ def usage():
     print("""Usage: {0} <command> [arguments...]
 team [Pokemon...]
     Print a type analysis table for a team.
+coverage <team size> <cutoff> [Pokemon...]
+    Determine coverage teams of a given size and cutoff.
 rank all [Generations...]
     Rank Pokémon based on stats and type from the given generations.
 rank final [Generations...]
@@ -146,6 +184,9 @@ def main():
         usage()
     elif sys.argv[1] == 'team':
         print_team(*[SPECIES[name] for name in sys.argv[2:]])
+    elif sys.argv[1] == 'coverage' and len(sys.argv) > 4:
+        score_combinations([SPECIES[name] for name in sys.argv[4:]],
+                int(sys.argv[2]), int(sys.argv[3]))
     elif sys.argv[1] == 'rank':
         generations = set([int(num) - 1 for num in sys.argv[3:]])
         if len(sys.argv) < 3:

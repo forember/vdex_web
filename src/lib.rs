@@ -10,23 +10,22 @@ use std::ptr::{null, null_mut};
 
 // MEMORY MANAGEMENT //////////////////////////////////////////////////////////
 
-fn allocate_name(s: String) -> *mut i8 {
+fn allocate_name(s: String) -> *mut u8 {
     CString::new(s).unwrap().into_raw()
 }
 
-fn allocate_enum_name<E: Enum + Debug>(repr: <E as Enum>::Repr) -> *mut i8 {
+fn allocate_enum_name<E: Enum + Debug>(repr: <E as Enum>::Repr) -> *mut u8 {
     allocate_name(format!("{:?}", <E as Enum>::from_repr(repr).unwrap()))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn vdex_free_name(name: *mut *mut i8) {
+pub unsafe extern "C" fn vdex_free_name(name: *mut *mut u8) {
     if !(*name).is_null() {
         CString::from_raw(*name);
         *name = null_mut();
     }
 }
 
-#[no_mangle]
 #[repr(C)] pub struct VDexOpaque { _opaque: [u8; 0] }
 
 trait Opaque {
@@ -96,7 +95,7 @@ macro_rules! vdex_enum {
         }
 
         #[no_mangle]
-        pub extern "C" fn $n(repr: $r) -> *mut i8 {
+        pub extern "C" fn $n(repr: $r) -> *mut u8 {
             allocate_enum_name::<$e>(repr)
         }
     };
@@ -173,7 +172,6 @@ pub extern "C" fn vdex_efficacy(damage: TypeRepr, target: TypeRepr) -> EfficacyR
 
 type ItemIdRepr = u16;
 
-#[no_mangle]
 #[repr(C)] pub struct VDexItemIter { ptr: *mut VDexOpaque }
 
 impl Opaque for VDexItemIter {
@@ -209,7 +207,7 @@ pub unsafe extern "C" fn vdex_free_item_iter(iter: *mut VDexItemIter) {
 }
 
 #[no_mangle]
-pub extern "C" fn vdex_item_name(id: ItemIdRepr) -> *mut i8 {
+pub extern "C" fn vdex_item_name(id: ItemIdRepr) -> *mut u8 {
     allocate_name(pokedex().items[ItemId(id)].name.clone())
 }
 
@@ -238,7 +236,6 @@ pub static VDEX_ITEM_FLAG_UNDERGROUND: ItemFlagsRepr = 0x80;
 #[no_mangle]
 pub static VDEX_NO_DOMINANT_FLAVOR: FlavorRepr = std::u8::MAX;
 
-#[no_mangle]
 #[repr(C)] pub struct VDexItemDetails {
     pub category: ItemCategoryRepr,
     pub unused: BooleanRepr,
@@ -279,7 +276,7 @@ type MoveIdRepr = u16;
 pub static VDEX_MOVE_COUNT: usize = vdex::moves::MOVE_COUNT;
 
 #[no_mangle]
-pub extern "C" fn vdex_move_name(id: MoveIdRepr) -> *mut i8 {
+pub extern "C" fn vdex_move_name(id: MoveIdRepr) -> *mut u8 {
     allocate_name(pokedex().moves[MoveId(id)].name.clone())
 }
 
@@ -335,7 +332,6 @@ pub static VDEX_MOVE_FLAG_HEAL: MoveFlagsRepr = 0x1000;
 #[no_mangle]
 pub static VDEX_MOVE_FLAG_AUTHENTIC: MoveFlagsRepr = 0x2000;
 
-#[no_mangle]
 #[repr(C)] pub struct VDexMoveDetails {
     pub generation: GenerationRepr,
     pub typ: TypeRepr,
@@ -432,7 +428,7 @@ pub static VDEX_SPECIES_COUNT: usize = vdex::pokemon::SPECIES_COUNT;
 pub static VDEX_POKEMON_COUNT: usize = vdex::pokemon::POKEMON_COUNT;
 
 #[no_mangle]
-pub extern "C" fn vdex_species_name(id: SpeciesIdRepr) -> *mut i8 {
+pub extern "C" fn vdex_species_name(id: SpeciesIdRepr) -> *mut u8 {
     allocate_name(pokedex().species[SpeciesId(id)].name.clone())
 }
 
@@ -442,7 +438,6 @@ pub extern "C" fn vdex_species_name(id: SpeciesIdRepr) -> *mut i8 {
 pub static VDEX_NO_STAT_DEPENDENCE: i8 = std::i8::MAX;
 
 #[derive(Default)]
-#[no_mangle]
 #[repr(C)] pub struct VDexEvolvesFrom {
     pub from_id: PokemonIdRepr,
     pub trigger: EvolutionTriggerRepr,
@@ -452,7 +447,6 @@ pub static VDEX_NO_STAT_DEPENDENCE: i8 = std::i8::MAX;
     pub relative_physical_stats: i8,
 }
 
-#[no_mangle]
 #[repr(C)] pub struct VDexSpeciesDetails {
     pub generation: GenerationRepr,
     pub egg_group1: EggGroupRepr,
@@ -493,7 +487,6 @@ pub extern "C" fn vdex_pokemon_count(species: SpeciesIdRepr) -> usize {
     pokedex().species[SpeciesId(species)].pokemon.len()
 }
 
-#[no_mangle]
 #[repr(C)] pub struct VDexPokemon { ptr: *const VDexOpaque }
 
 impl OpaqueConst for VDexPokemon {
@@ -534,7 +527,6 @@ pub static VDEX_STAT_PERMANENT_SPECIAL_ATTACK: usize = 4;
 #[no_mangle]
 pub static VDEX_STAT_PERMANENT_SPECIAL_DEFENSE: usize = 5;
 
-#[no_mangle]
 #[repr(C)] pub struct VDexPokemonDetails {
     id: PokemonIdRepr,
     ability1: AbilityRepr,
@@ -591,7 +583,7 @@ pub unsafe extern "C" fn vdex_form_battle_only(
 #[no_mangle]
 pub unsafe extern "C" fn vdex_form_name(
     pokemon: VDexPokemon, index: usize
-) -> *mut i8 {
+) -> *mut u8 {
     match pokemon.as_ref().forms[index].name.clone() {
         Some(n) => allocate_name(n),
         None => null_mut(),
@@ -608,7 +600,6 @@ pub unsafe extern "C" fn vdex_moveset_entry_count(
     pokemon.as_ref().moves.get(e).map_or(0, |s| s.len())
 }
 
-#[no_mangle]
 #[repr(C)] pub struct VDexMovesetEntry {
     pub mov: MoveIdRepr,
     pub learn_method: LearnMethodRepr,
