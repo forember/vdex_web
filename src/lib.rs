@@ -10,16 +10,21 @@ use std::ptr::{null, null_mut};
 
 // MEMORY MANAGEMENT //////////////////////////////////////////////////////////
 
-fn allocate_name(s: String) -> *mut u8 {
+#[cfg(target_arch = "x86_64")]
+type Arch8 = i8;
+#[cfg(target_arch = "aarch64")]
+type Arch8 = u8;
+
+fn allocate_name(s: String) -> *mut Arch8 {
     CString::new(s).unwrap().into_raw()
 }
 
-fn allocate_enum_name<E: Enum + Debug>(repr: <E as Enum>::Repr) -> *mut u8 {
+fn allocate_enum_name<E: Enum + Debug>(repr: <E as Enum>::Repr) -> *mut Arch8 {
     allocate_name(format!("{:?}", <E as Enum>::from_repr(repr).unwrap()))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn vdex_free_name(name: *mut *mut u8) {
+pub unsafe extern "C" fn vdex_free_name(name: *mut *mut Arch8) {
     if !(*name).is_null() {
         CString::from_raw(*name);
         *name = null_mut();
@@ -95,7 +100,7 @@ macro_rules! vdex_enum {
         }
 
         #[no_mangle]
-        pub extern "C" fn $n(repr: $r) -> *mut u8 {
+        pub extern "C" fn $n(repr: $r) -> *mut Arch8 {
             allocate_enum_name::<$e>(repr)
         }
     };
@@ -207,7 +212,7 @@ pub unsafe extern "C" fn vdex_free_item_iter(iter: *mut VDexItemIter) {
 }
 
 #[no_mangle]
-pub extern "C" fn vdex_item_name(id: ItemIdRepr) -> *mut u8 {
+pub extern "C" fn vdex_item_name(id: ItemIdRepr) -> *mut Arch8 {
     allocate_name(pokedex().items[ItemId(id)].name.clone())
 }
 
@@ -276,7 +281,7 @@ type MoveIdRepr = u16;
 pub static VDEX_MOVE_COUNT: usize = vdex::moves::MOVE_COUNT;
 
 #[no_mangle]
-pub extern "C" fn vdex_move_name(id: MoveIdRepr) -> *mut u8 {
+pub extern "C" fn vdex_move_name(id: MoveIdRepr) -> *mut Arch8 {
     allocate_name(pokedex().moves[MoveId(id)].name.clone())
 }
 
@@ -428,7 +433,7 @@ pub static VDEX_SPECIES_COUNT: usize = vdex::pokemon::SPECIES_COUNT;
 pub static VDEX_POKEMON_COUNT: usize = vdex::pokemon::POKEMON_COUNT;
 
 #[no_mangle]
-pub extern "C" fn vdex_species_name(id: SpeciesIdRepr) -> *mut u8 {
+pub extern "C" fn vdex_species_name(id: SpeciesIdRepr) -> *mut Arch8 {
     allocate_name(pokedex().species[SpeciesId(id)].name.clone())
 }
 
@@ -583,7 +588,7 @@ pub unsafe extern "C" fn vdex_form_battle_only(
 #[no_mangle]
 pub unsafe extern "C" fn vdex_form_name(
     pokemon: VDexPokemon, index: usize
-) -> *mut u8 {
+) -> *mut Arch8 {
     match pokemon.as_ref().forms[index].name.clone() {
         Some(n) => allocate_name(n),
         None => null_mut(),
