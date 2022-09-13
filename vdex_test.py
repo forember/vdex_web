@@ -35,7 +35,7 @@ def get_immunity(details):
         return None
 
 EFFICACY = { -2: 0, -1: 2, 0: 4, 1: 8}
-EFFICACY_RATING = { 0: 4, 1: 3, 2: 2, 4: 0, 8: -4, 16: -8 }
+EFFICACY_RATING = { 0: 4, 1: 3, 2: 2, 4: 0, 8: -4, 16: -6 }
 
 def rate_resistance(types, immunity=None):
     count = _vdex.TYPE_COUNT
