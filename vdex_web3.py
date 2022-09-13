@@ -145,5 +145,5 @@ def suggest(names, maxgen, suggest_count):
 @app.route("/suggest")
 def route_suggest():
     return flask.jsonify(suggest(flask.request.args.getlist("poke"),
-        flask.request.args.get("maxgen", default=5, type=int) - 1),
-        flask.request.args.get("suggest", default=12. type=int))
+        flask.request.args.get("maxgen", default=5, type=int) - 1,
+        flask.request.args.get("suggest", default=12, type=int)))
