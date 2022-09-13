@@ -123,7 +123,7 @@ def modified_rating(team_dict, base_values=None):
     return (modr, (sum(coverage), ratings_total, negatives),
             (coverage, or_totals, ratings_total))
 
-def suggest(names, maxgen):
+def suggest(names, maxgen, suggest_count):
     team_dict = team(names)
     base_modr, base_extras, base_values = modified_rating(team_dict)
     team_dict["_RATING"] = (base_modr, base_extras)
@@ -139,10 +139,11 @@ def suggest(names, maxgen):
         modr, extras, _ = modified_rating({name: RATINGS[name]}, base_values)
         all_rated.append((modr, extras, name))
     all_rated.sort(reverse=True)
-    team_dict["_SUGGEST"] = all_rated[:5]
+    team_dict["_SUGGEST"] = all_rated[:suggest_count]
     return team_dict
 
 @app.route("/suggest")
 def route_suggest():
     return flask.jsonify(suggest(flask.request.args.getlist("poke"),
-        flask.request.args.get("maxgen", default=5, type=int) - 1))
+        flask.request.args.get("maxgen", default=5, type=int) - 1),
+        flask.request.args.get("suggest", default=12. type=int))
